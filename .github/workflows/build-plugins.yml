@@ -35,13 +35,18 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y autoconf automake libncursesw5-dev libssl-dev libcap-dev make gcc pkg-config wget jq
 
+      - name: Get latest powertop version
+        id: powertop-version
+        run: |
+          REPO_V=$(wget -qO- "https://api.github.com/repos/fenrus75/powertop/releases/latest" | jq -r '.tag_name')
+          echo "POWERTOP_VERSION=$REPO_V" >> $GITHUB_OUTPUT
+          echo "Using powertop version: $REPO_V"
+
       - name: Clone and build powertop
-        env:
-          VERSION: ${{ steps.version.outputs.VERSION }}
         run: |
           git clone https://github.com/fenrus75/powertop.git powertop-src
           cd powertop-src
-          git checkout v${{ env.VERSION }}
+          git checkout ${{ steps.powertop-version.outputs.POWERTOP_VERSION }}
 
           ./autogen.sh
           ./configure LDFLAGS='-pthread' --disable-nls --prefix=/usr
