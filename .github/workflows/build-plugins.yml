@@ -55,7 +55,7 @@ jobs:
 
       - name: Download plugin icon
         run: |
-          wget -O icon.png "https://raw.githubusercontent.com/ich777/docker-templates/master/ich777/images/powertop.png"
+          wget -O icon.png "https://raw.githubusercontent.com/ich777/mos-templates/master/images/powertop.png"
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
