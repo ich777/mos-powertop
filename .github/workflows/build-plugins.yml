@@ -1,0 +1,136 @@
+name: Build and Release
+
+on:
+  push:
+    tags:
+      - '[0-9]*'
+  workflow_dispatch:
+    inputs:
+      version:
+        description: '0.0.1'
+        required: true
+        default: '0.0.1'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set version
+        id: version
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            VERSION="${{ github.event.inputs.version }}"
+          else
+            VERSION="${GITHUB_REF#refs/tags/}"
+          fi
+          echo "VERSION=$VERSION" >> $GITHUB_OUTPUT
+          echo "Building version: $VERSION"
+
+      - name: Install build dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y autoconf automake libncursesw5-dev libssl-dev libcap-dev make gcc pkg-config wget jq
+
+      - name: Clone and build powertop
+        env:
+          VERSION: ${{ steps.version.outputs.VERSION }}
+        run: |
+          git clone https://github.com/fenrus75/powertop.git powertop-src
+          cd powertop-src
+          git checkout v${{ env.VERSION }}
+
+          ./autogen.sh
+          ./configure LDFLAGS='-pthread' --disable-nls --prefix=/usr
+          make -j$(nproc)
+          make install DESTDIR=staging
+
+      - name: Download plugin icon
+        run: |
+          wget -O icon.png "https://raw.githubusercontent.com/ich777/docker-templates/master/ich777/images/powertop.png"
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Build web plugin
+        working-directory: page
+        env:
+          PLUGIN_VERSION: ${{ steps.version.outputs.VERSION }}
+        run: |
+          npm ci
+          npm run build
+
+      - name: Create package structure
+        run: |
+          VERSION=${{ steps.version.outputs.VERSION }}
+          PKG_NAME="powertop-${VERSION}-1+mos-plugin"
+          PKG_DIR="${PKG_NAME}_amd64"
+
+          mkdir -p ${PKG_DIR}/usr/bin/plugins
+          mkdir -p ${PKG_DIR}/var/www/mos-plugins/powertop
+          mkdir -p ${PKG_DIR}/var/cache/powertop
+          mkdir -p ${PKG_DIR}/DEBIAN
+
+          cp powertop-src/staging/usr/bin/powertop ${PKG_DIR}/usr/bin/
+          chmod +x ${PKG_DIR}/usr/bin/powertop
+          ln -s /usr/bin/powertop ${PKG_DIR}/usr/bin/plugins/powertop
+
+          cp -R page/dist/powertop/* ${PKG_DIR}/var/www/mos-plugins/powertop/
+          cp icon.png ${PKG_DIR}/var/www/mos-plugins/powertop/ || true
+
+          mkdir -p ${PKG_DIR}/var/cache/powertop
+          touch ${PKG_DIR}/var/cache/powertop/saved_parameters.powertop
+
+          cat > ${PKG_DIR}/DEBIAN/control << EOF
+          Package: powertop
+          Version: ${VERSION}-1+mos-plugin
+          Architecture: amd64
+          Maintainer: admin@minenet.at
+          Description: PowerTOP Plugin for MOS
+          EOF
+
+          cat > ${PKG_DIR}/DEBIAN/postinst << 'EOF'
+          #!/bin/bash
+          chmod +x /usr/bin/powertop
+          mkdir -p /var/cache/powertop
+          touch /var/cache/powertop/saved_parameters.powertop
+          exit 0
+          EOF
+          chmod +x ${PKG_DIR}/DEBIAN/postinst
+
+          cat > ${PKG_DIR}/DEBIAN/postrm << 'EOF'
+          #!/bin/bash
+          exit 0
+          EOF
+          chmod +x ${PKG_DIR}/DEBIAN/postrm
+
+      - name: Build .deb package
+        run: |
+          VERSION=${{ steps.version.outputs.VERSION }}
+          PKG_NAME="powertop-${VERSION}-1+mos-plugin"
+          PKG_DIR="${PKG_NAME}_amd64"
+          DEB_FILE="${PKG_NAME}_amd64.deb"
+
+          dpkg-deb --build ${PKG_DIR}
+          md5sum ${DEB_FILE} | awk '{print $1}' > ${DEB_FILE}.md5
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: ${{ steps.version.outputs.VERSION }}
+          name: PowerTOP ${{ steps.version.outputs.VERSION }}
+          body: |
+            ## PowerTOP Plugin ${{ steps.version.outputs.VERSION }}
+
+          files: |
+            powertop-${{ steps.version.outputs.VERSION }}-1+mos-plugin_amd64.deb
+            powertop-${{ steps.version.outputs.VERSION }}-1+mos-plugin_amd64.deb.md5
+          draft: false
+          prerelease: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
