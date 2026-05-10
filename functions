@@ -1,0 +1,22 @@
+#!/bin/bash
+
+install() {
+  mkdir -p /var/cache/powertop 2>/dev/null
+  touch /var/cache/powertop/saved_parameters.powertop 2>/dev/null
+  if [ ! -f /usr/bin/plugins/powertop ] ; then
+    ln -sf /usr/bin/powertop /usr/bin/plugins/powertop
+  fi
+}
+
+uninstall() {
+  rm -f /usr/bin/plugins/powertop
+  rm -rf /var/cache/powertop
+}
+
+mos_start_after_services() {
+  AUTO_TUNE=$(jq -r '.auto_tune // false' /boot/optional/plugins/powertop/settings.json 2>/dev/null)
+
+  if [ "$AUTO_TUNE" == "true" ] ; then
+    /usr/bin/powertop --auto-tune > /dev/null 2>&1 &
+  fi
+}

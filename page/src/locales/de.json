@@ -1,0 +1,13 @@
+{
+  "plugin_powertop": {
+    "title": "PowerTOP",
+    "description": "Leistungsverbrauch überwachen und auto-tune verwalten",
+    "settings": "Einstellungen",
+    "auto_tune": "PowerTOP auto-tune beim Boot aktivieren",
+    "save_settings": "Einstellungen speichern",
+    "terminal": "PowerTOP Terminal",
+    "terminal_hint": "Interaktive PowerTop Konsole",
+    "open_terminal": "Terminal öffnen",
+    "close_terminal": "Terminal schließen"
+  }
+}
