@@ -2,6 +2,7 @@
   "plugin_powertop": {
     "title": "PowerTOP",
     "description": "Monitor power consumption and manage auto-tune",
+    "version": "Version:",
     "settings": "Settings",
     "auto_tune": "Enable PowerTOP auto-tune on boot",
     "save_settings": "Save Settings",
