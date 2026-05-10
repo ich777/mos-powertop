@@ -5,6 +5,14 @@
     <v-skeleton-loader v-if="loading" :loading="true" type="card" />
 
     <div v-else style="margin-bottom: 80px">
+      <!-- Version Info -->
+      <v-card class="mb-4 pa-0" v-if="version">
+        <v-card-title class="d-flex align-center">
+          <v-icon class="mr-2">mdi-information-outline</v-icon>
+          <span>{{ $t('plugin_powertop.version') }} {{ version }}</span>
+        </v-card-title>
+      </v-card>
+
       <!-- Settings Card -->
       <v-card class="mb-4 pa-0">
         <v-card-title class="d-flex align-center">
@@ -77,6 +85,8 @@ const loading = ref(true);
 const saving = ref(false);
 const overlay = ref(false);
 
+const version = ref('');
+
 const settings = reactive({
   auto_tune: false
 });
@@ -93,6 +103,32 @@ let terminalSessionId = null;
 const getAuthHeaders = () => ({
   Authorization: 'Bearer ' + localStorage.getItem('authToken'),
 });
+
+const fetchVersion = async () => {
+  try {
+    const res = await fetch('/api/v1/mos/plugins/query', {
+      method: 'POST',
+      headers: {
+        ...getAuthHeaders(),
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        command: 'powertop',
+        args: ['--version'],
+        timeout: 5,
+        parse_json: false,
+      }),
+    });
+    if (res.ok) {
+      const data = await res.json();
+      if (data.success && data.output) {
+        version.value = data.output.trim();
+      }
+    }
+  } catch (e) {
+    console.error('Failed to fetch version:', e);
+  }
+};
 
 const fetchSettings = async () => {
   try {
@@ -252,6 +288,7 @@ const closeTerminal = () => {
 
 onMounted(async () => {
   try {
+    await fetchVersion();
     await fetchSettings();
   } catch (e) {
     console.error('Failed to initialize:', e);
