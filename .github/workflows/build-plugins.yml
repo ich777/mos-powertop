@@ -33,7 +33,7 @@ jobs:
       - name: Install build dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y autoconf automake autopoint gettext libtool libtool-bin libncursesw5-dev libssl-dev libcap-dev libnl-3-dev libnl-genl-3-dev libpci-dev make gcc g++ pkg-config wget jq
+          sudo apt-get install -y autoconf autoconf-archive automake autopoint gettext libtool libtool-bin libncursesw5-dev libnl-3-dev libnl-genl-3-dev libpci-dev libtracefs-dev libtraceevent-dev make gcc g++ pkg-config wget jq
 
       - name: Get latest powertop version
         id: powertop-version
