@@ -6,10 +6,10 @@
 
     <div v-else style="margin-bottom: 80px">
       <!-- Version Info -->
-      <v-card class="mb-4 pa-0" v-if="version">
+      <v-card class="mb-4 pa-0">
         <v-card-title class="d-flex align-center">
           <v-icon class="mr-2">mdi-information-outline</v-icon>
-          <span>{{ $t('plugin_powertop.version') }} {{ version }}</span>
+          <span>{{ version }}</span>
         </v-card-title>
       </v-card>
 
@@ -126,7 +126,7 @@ const fetchVersion = async () => {
       }
     }
   } catch (e) {
-    console.error('Failed to fetch version:', e);
+    version.value = 'Failed to fetch version';
   }
 };
 

@@ -2,7 +2,6 @@
   "plugin_powertop": {
     "title": "PowerTOP",
     "description": "Leistungsverbrauch überwachen und auto-tune verwalten",
-    "version": "Version:",
     "settings": "Einstellungen",
     "auto_tune": "PowerTOP auto-tune beim Boot aktivieren",
     "save_settings": "Einstellungen speichern",
