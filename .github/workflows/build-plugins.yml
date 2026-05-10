@@ -49,9 +49,9 @@ jobs:
           git checkout ${{ steps.powertop-version.outputs.POWERTOP_VERSION }}
 
           ./autogen.sh
-          ./configure LDFLAGS='-pthread' --disable-nls --prefix=/usr
+          ./configure LDFLAGS='-pthread' --disable-nls --prefix=/usr --sbindir=/usr/bin
           make -j$(nproc)
-          make install DESTDIR=staging
+          make install DESTDIR=$GITHUB_WORKSPACE/powertop-src/staging
 
       - name: Download plugin icon
         run: |
