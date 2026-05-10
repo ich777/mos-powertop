@@ -67,7 +67,7 @@ jobs:
         env:
           PLUGIN_VERSION: ${{ steps.version.outputs.VERSION }}
         run: |
-          npm ci
+          npm install
           npm run build
 
       - name: Create package structure
