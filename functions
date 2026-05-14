@@ -17,6 +17,7 @@ mos_start_after_services() {
   AUTO_TUNE=$(jq -r '.auto_tune // false' /boot/optional/plugins/powertop/settings.json 2>/dev/null)
 
   if [ "$AUTO_TUNE" == "true" ] ; then
+    export TERM=dumb
     /usr/bin/powertop --auto-tune > /dev/null 2>&1 &
   fi
 }
